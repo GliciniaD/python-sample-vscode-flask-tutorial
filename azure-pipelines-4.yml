@@ -1,0 +1,42 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+strategy:
+  matrix:
+    Python38:
+      python.version: '3.8'
+    Python39:
+      python.version: '3.9'
+
+jobs:
+- job: TestAndCoverage
+  display name:'Run Python Tests and collect Coverage'
+
+steps:
+#Install Python and pip
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '$(python.version)'
+- script: |
+    python -m pip install --upgrade pip
+    pip install -r requirements.txt
+
+#Install Test and Coverage tool 
+- script: |     
+    pytest --cov=. --cov-report=xml
+  displayName: 'Install test and coverage checker'
+
+# Publish coverage results
+- task: PublishCoveCoverageResults@1
+    inputs:
+      codeCoverageTool: 'Covertura'
+      summaryFileLocation:'coverage.xml'
+    displayName:'Publish Code to ADO'
