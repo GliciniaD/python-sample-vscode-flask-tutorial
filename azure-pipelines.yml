@@ -42,7 +42,7 @@ steps:
     command: publish
     publishDirectory: '$(Build.ArtifactStagingDirectory)'
     feedsToUsePublish: 'internal'
-    vstsFeedPublish: 'DEVOPSAZ400 Pratice (Agile One)/Test-Feed'
+    vstsFeedPublish: 'DevOpsAZ400 Pratice (Agile one)/Test-Feed'
     vstsFeedPackagePublish: '$(packageName)'
     versionOption: 'custom'
     versionPublish: '$(packageVersion)'
