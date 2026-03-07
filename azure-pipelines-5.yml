@@ -15,7 +15,13 @@ Stage: Create Web app to Azure
   script
 
 
+#Build the app
 Stage: Build App 
 
 
+#Deploy it to app created in stage one
 Stage: Deploy app to web app I created above 
+
+
+Stage:
+Echo: "Delete it now"
