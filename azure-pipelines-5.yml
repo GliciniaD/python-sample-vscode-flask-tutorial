@@ -44,7 +44,7 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: '3.10'  # Updated to 3.10, change if you want
+        versionSpec: '3.10'  
         addToPath: true
     - script: |
         python -m pip install --upgrade pip
