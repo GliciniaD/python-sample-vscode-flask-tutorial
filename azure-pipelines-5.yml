@@ -1,11 +1,5 @@
 # Pipeline to create webapp, build, deploy, and reminder
 
-trigger:
-  branches:
-    include:
-      - main
-  batch: true
-
 pool:
   vmImage: ubuntu-latest
 
