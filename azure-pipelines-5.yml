@@ -1,4 +1,5 @@
-# Starter pipeline
+# Pipeline I created to 1)create webapp into exisitng rg and plan
+
 trigger:
 - main
 
@@ -7,27 +8,31 @@ pool:
 
 
 stages:
-- stage: Create Web App
-  displayName: 'Create Web App on Azure'
+- stage: CreateWebApp
+  displayName: "Create Web App on Azure"
   jobs:
   - job: CreateApp
     displayName: 'Create app via CLI'
     steps:
     - task: AzureCLI@2
-      displayName: AzureCLI Deployment
+      displayName: "AzureCLI Deployment"
       inputs:
-      azureSubscription: # string. Alias: connectedServiceNameARM. Required. Azure Resource Manager connection. 
-      scriptType:'bash' 
-      scriptLocation: inlineScript
-      inlineScript: |
-      az webapp create \  --resource-group AZ400-play \   --plan ASP-AzureAppIncidentProjectgroup-8d3f \   --name myflaskwebapp123 \  --runtime "PYTHON:3.10"
+        azureSubscription: SPN-Dev-01 
+        scriptType: bash 
+        scriptLocation: inlineScript
+        inlineScript: |
+          az webapp create \  
+          --resource-group AZ400-play \   
+          --plan ASP-AzureAppIncidentProjectgroup-8d3f \   
+          --name flaskappgmd28 \  
+          --runtime "PYTHON:3.10"
 
-- stage: Build app
+- stage: BuildApp
   displayName: 'Build Python Stage'
-  dependsOn: Create Web App
+  dependsOn: CreateWebApp
   isSkippable: false
   jobs:
-  - job: Build App on Devops
+  - job: BuildAppOnDevops
     displayName: 'Build App on Devops'
     steps:
     - task: UsePythonVersion@0
@@ -36,35 +41,30 @@ stages:
     - script: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest pytest-cov
       displayName: 'Install dependencies'
 
-- stage: Deploy app
+- stage: DeployApp
   displayName: 'Deploy App Stage'
-  dependsOn: Build app
+  dependsOn: BuildApp
   isSkippable: false
   jobs:
-  - job: Deploy to  Azure 
+  - job: DeployToAzure 
     displayName: 'Deploy Build App to Azure'
     steps:
-    - script: |
-        echo "Running unit tests..."
-      displayName: 'Run unit tests'
     - task: AzureWebApp@1
-        inputs:
-      azureSubscription: # string. Required. Azure subscription. 
-      appType: # 'webApp' | 'webAppLinux'. Required. App type. 
-      appName: # string. Required. App name. 
-      package: '$(System.DefaultWorkingDirectory)/**/*.zip' # string. Required. Package or folder. Default: $(System.DefaultWorkingDirectory)/**/*.zip.
+      inputs:
+        azureSubscription: SPN-Dev-01
+        appType: webApp 
+        appName: flaskappgmd28 
+        package: '$(System.DefaultWorkingDirectory)'
 
-
-- stage: Reminder to delete
+- stage: ReminderToDelete
   displayName: 'Reminder to delete'
-  dependsOn: Deploy App
+  dependsOn: DeployApp
   isSkippable: false
   jobs:
   - job: Reminder
     displayName: 'Text reminder '
     steps:
     - script: |
-      echo "Delete or at least stop"
+        echo "Delete or at least stop"
