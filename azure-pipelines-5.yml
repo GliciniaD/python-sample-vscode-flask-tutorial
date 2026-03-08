@@ -1,6 +1,5 @@
-# Pipeline I created to 1)create webapp into exisitng rg and plan
+# Pipeline to create webapp, build, deploy, and reminder
 
----
 trigger:
   branches:
     include:
@@ -10,47 +9,54 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-
 stages:
+# ===============================
+# Stage 1: Create Web App
+# ===============================
 - stage: CreateWebApp
-  displayName: "Create Web App on Azure"
+  displayName: Create Web App on Azure
   jobs:
   - job: CreateApp
-    displayName: 'Create app via CLI'
+    displayName: Create app via CLI
     steps:
     - task: AzureCLI@2
-      displayName: "AzureCLI Deployment"
+      displayName: "Create Web App if not exists"
       inputs:
-        azureSubscription: SPN-Dev-01 
-        scriptType: bash 
+        azureSubscription: SPN-Dev-01
+        scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
-          az webapp create \
-          --resource-group AZ400-play \
-          --plan ASP-AzureAppIncidentProjectgroup-8d3f \
-          --name flaskappgmd28 \
-          --runtime "PYTHON:3.10"
+          if az webapp show --name flaskappgmd28 --resource-group AZ400-play &>/dev/null; then
+              echo "Web app already exists, skipping creation"
+          else
+              az webapp create --resource-group AZ400-play --plan ASP-AzureAppIncidentProjectgroup-8d3f --name flaskappgmd28 --runtime "PYTHON:3.10"
+          fi
 
+# ===============================
+# Stage 2: Build Python App
+# ===============================
 - stage: BuildApp
   displayName: 'Build Python Stage'
   dependsOn: CreateWebApp
-  isSkippable: false
   jobs:
   - job: BuildAppOnDevops
-    displayName: 'Build App on Devops'
+    displayName: 'Build App on DevOps'
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: '$(python.version)'
+        versionSpec: '3.10'  # Updated to 3.10, change if you want
+        addToPath: true
     - script: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
       displayName: 'Install dependencies'
 
+# ===============================
+# Stage 3: Deploy App
+# ===============================
 - stage: DeployApp
   displayName: 'Deploy App Stage'
   dependsOn: BuildApp
-  isSkippable: false
   jobs:
   - job: DeployToAzure 
     displayName: 'Deploy Build App to Azure'
@@ -62,13 +68,15 @@ stages:
         appName: flaskappgmd28 
         package: '$(System.DefaultWorkingDirectory)'
 
+# ===============================
+# Stage 4: Reminder
+# ===============================
 - stage: ReminderToDelete
   displayName: 'Reminder to delete'
   dependsOn: DeployApp
-  isSkippable: false
   jobs:
   - job: Reminder
-    displayName: 'Text reminder '
+    displayName: 'Text reminder'
     steps:
     - script: |
         echo "Delete or at least stop"
